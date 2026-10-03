@@ -9,7 +9,6 @@ data class ModelInfo(
     val supportedLanguages: String, // e.g. "English, Persian, Multilingual"
     val supportedLanguagesFa: String, // e.g. "فارسی، انگلیسی، چندزبانه"
     val minRamGb: Int,
-    val downloadUrl: String,
     val fileName: String,
     val description: String,
     val descriptionFa: String,
@@ -18,17 +17,16 @@ data class ModelInfo(
     val localPath: String? = null
 )
 
-sealed class DownloadState {
-    data object Idle : DownloadState()
-    data class Downloading(
+sealed class ModelCopyState {
+    data object Idle : ModelCopyState()
+    data class Copying(
         val progress: Float,
-        val downloadedBytes: Long,
+        val copiedBytes: Long,
         val totalBytes: Long,
-        val speedText: String
-    ) : DownloadState()
-    data object Paused : DownloadState()
-    data class Failed(val error: String) : DownloadState()
-    data object Completed : DownloadState()
+        val fileName: String
+    ) : ModelCopyState()
+    data class Success(val fileName: String) : ModelCopyState()
+    data class Error(val message: String) : ModelCopyState()
 }
 
 data class AppSettings(

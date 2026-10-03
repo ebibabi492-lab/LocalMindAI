@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 
 class ModelRepository(
     private val context: Context,
     val downloader: ModelDownloader
 ) {
 
+    // Predefined recommended model profiles for LiteRT-LM (offline files to be copied into folder)
     private val predefinedModels = listOf(
         ModelInfo(
             id = "qwen2.5-0.5b",
@@ -27,7 +27,6 @@ class ModelRepository(
             supportedLanguages = "Persian, English, Multilingual",
             supportedLanguagesFa = "فارسی، انگلیسی، چندزبانه",
             minRamGb = 2,
-            downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct-litert/resolve/main/model.litertlm",
             fileName = "qwen2.5-0.5b-instruct.litertlm",
             description = "Ultra-fast lightweight model. Highly recommended for phones with 2GB-3GB RAM. Fast inference speed and low battery impact.",
             descriptionFa = "مدل بسیار سبک و پرسرعت. مناسب برای گوشی‌های با ۲ تا ۳ گیگابایت رم. پاسخگویی سریع و مصرف باتری بسیار کم."
@@ -41,7 +40,6 @@ class ModelRepository(
             supportedLanguages = "Persian, English, Multilingual",
             supportedLanguagesFa = "فارسی، انگلیسی، چندزبانه",
             minRamGb = 3,
-            downloadUrl = "https://huggingface.co/litert-community/gemma-3-1b-it-litert/resolve/main/model.litertlm",
             fileName = "gemma-3-1b-it.litertlm",
             description = "Google Gemma 3 optimized for mobile edge hardware. Great reasoning, knowledge, and multilingual accuracy.",
             descriptionFa = "مدل جمای ۳ گوگل بهینه‌شده برای موبایل. قدرت استدلال، دانش عمومی و ترجمه چندزبانه عالی."
@@ -55,7 +53,6 @@ class ModelRepository(
             supportedLanguages = "Persian, English, Multilingual",
             supportedLanguagesFa = "فارسی، انگلیسی، چندزبانه",
             minRamGb = 4,
-            downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct-litert/resolve/main/model.litertlm",
             fileName = "qwen2.5-1.5b-instruct.litertlm",
             description = "Comprehensive language reasoning and higher precision. Recommended for devices with 4GB+ RAM.",
             descriptionFa = "کیفیت پاسخگویی بالا و استدلال دقیق‌تر. مناسب دستگاه‌های با حداقل ۴ گیگابایت حافظه رم."
@@ -69,7 +66,6 @@ class ModelRepository(
             supportedLanguages = "English, Multilingual",
             supportedLanguagesFa = "انگلیسی، چندزبانه",
             minRamGb = 2,
-            downloadUrl = "https://huggingface.co/litert-community/SmolLM2-360M-Instruct-litert/resolve/main/model.litertlm",
             fileName = "smollm2-360m-instruct.litertlm",
             description = "Extremely small footprint. Instant local startup and tiny memory usage for quick tasks.",
             descriptionFa = "حجم بسیار اندک و حداقل مصرف رم برای اجرای سریع حتی روی گوشی‌های اقتصادی."
@@ -81,6 +77,10 @@ class ModelRepository(
 
     init {
         refreshModelsList()
+    }
+
+    fun getModelsDirectoryPath(): String {
+        return downloader.getModelsDirectoryPath()
     }
 
     fun refreshModelsList() {
@@ -107,10 +107,9 @@ class ModelRepository(
                 supportedLanguages = "Custom",
                 supportedLanguagesFa = "سفارشی",
                 minRamGb = 2,
-                downloadUrl = "",
                 fileName = file.name,
-                description = "Locally imported model file: ${file.name}",
-                descriptionFa = "مدل محلی اضافه شده: ${file.name}",
+                description = "Locally placed model file: ${file.name}",
+                descriptionFa = "مدل محلی موجود در مسیر: ${file.name}",
                 isInstalled = true,
                 isCustom = true,
                 localPath = file.absolutePath
@@ -120,18 +119,14 @@ class ModelRepository(
         _models.value = updated + customFiles
     }
 
-    suspend fun importModelFromUri(uri: Uri, originalFileName: String?): Result<ModelInfo> = withContext(Dispatchers.IO) {
+    suspend fun importModelFromUri(uri: Uri, targetFileName: String?): Result<ModelInfo> = withContext(Dispatchers.IO) {
         try {
-            val contentResolver = context.contentResolver
-            val safeName = (originalFileName ?: "imported_model.litertlm")
+            val safeName = (targetFileName ?: "custom_model.litertlm")
                 .replace("[^a-zA-Z0-9._-]".toRegex(), "_")
-            val targetFile = File(downloader.getModelsDirectory(), safeName)
-
-            contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(targetFile).use { output ->
-                    input.copyTo(output)
-                }
-            } ?: return@withContext Result.failure(Exception("Unable to read selected file"))
+            val copyResult = downloader.copyModelFromUri(uri, safeName)
+            if (copyResult.isFailure) {
+                return@withContext Result.failure(copyResult.exceptionOrNull() ?: Exception("Copy failed"))
+            }
 
             refreshModelsList()
             val imported = _models.value.find { it.fileName == safeName }

@@ -278,10 +278,10 @@ fun ChatScreen(
                             shape = RoundedCornerShape(24.dp),
                             modifier = Modifier
                                 .height(48.dp)
-                                .testTag("download_first_model_button")
+                                .testTag("open_model_manager_empty_button")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Download,
+                                imageVector = Icons.Default.Layers,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )

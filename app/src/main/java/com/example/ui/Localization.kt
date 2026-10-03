@@ -1,7 +1,6 @@
 package com.example.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.LayoutDirection
 import java.util.Locale
 
@@ -26,22 +25,22 @@ object AppStrings {
     fun appName(isFa: Boolean) = "LocalMind AI"
 
     fun welcomeMessage(isFa: Boolean) = if (isFa)
-        "سلام! من دستیار هوشمند آفلاین شما هستم. بدون نیاز به اینترنت میتوانیم گفتگو کنیم."
+        "سلام! من دستیار هوشمند ۱۰۰٪ آفلاین شما هستم. بدون اتصال اینترنت و با مدل‌های محلی نصب‌شده گفتگو می‌کنیم."
     else
-        "Hello! I am your offline AI assistant. We can chat completely without internet."
+        "Hello! I am your 100% offline AI assistant running locally on your device hardware without internet."
 
     fun noModelMessage(isFa: Boolean) = if (isFa)
-        "برای شروع، ابتدا یک مدل هوش مصنوعی دانلود کنید."
+        "برای شروع، فایل مدل (.litertlm) را در مسیر پوشه کپی کرده یا از حافظه دستگاه وارد کنید."
     else
-        "To get started, please download or select an AI model first."
+        "To get started, please copy a .litertlm model file into the models folder or import it from your device storage."
 
     fun offlineReadyBadge(isFa: Boolean) = if (isFa) "هوش مصنوعی آفلاین آماده است" else "Offline AI Ready"
 
-    fun loadingModel(isFa: Boolean) = if (isFa) "در حال بارگذاری مدل..." else "Loading model..."
+    fun loadingModel(isFa: Boolean) = if (isFa) "در حال بارگذاری مدل در حافظه..." else "Loading model into memory..."
 
     fun noModelLoaded(isFa: Boolean) = if (isFa) "مدلی انتخاب نشده است" else "No model selected"
 
-    fun inputPlaceholder(isFa: Boolean) = if (isFa) "پیام خود را بنویسید..." else "Ask anything offline..."
+    fun inputPlaceholder(isFa: Boolean) = if (isFa) "پیام خود را به صورت آفلاین بنویسید..." else "Ask anything offline..."
 
     fun newChat(isFa: Boolean) = if (isFa) "گفتگوی جدید" else "New Conversation"
 
@@ -51,38 +50,46 @@ object AppStrings {
 
     fun copied(isFa: Boolean) = if (isFa) "پاسخ کپی شد" else "Copied to clipboard"
 
-    fun models(isFa: Boolean) = if (isFa) "مدیریت مدل‌ها" else "Model Manager"
+    fun models(isFa: Boolean) = if (isFa) "مدیریت مدل‌های محلی" else "Local Models"
 
     fun settings(isFa: Boolean) = if (isFa) "تنظیمات" else "Settings"
 
-    fun download(isFa: Boolean) = if (isFa) "دانلود" else "Download"
+    fun copyModel(isFa: Boolean) = if (isFa) "کپی یا وارد کردن فایل" else "Copy / Import File"
 
-    fun pause(isFa: Boolean) = if (isFa) "مکث" else "Pause"
+    fun copyPath(isFa: Boolean) = if (isFa) "کپی آدرس مسیر" else "Copy Path"
 
-    fun resume(isFa: Boolean) = if (isFa) "ادامه دانلود" else "Resume"
+    fun pathCopied(isFa: Boolean) = if (isFa) "آدرس مسیر در حافظه کپی شد" else "Directory path copied to clipboard"
 
-    fun delete(isFa: Boolean) = if (isFa) "حذف" else "Delete"
+    fun modelsDirectoryTitle(isFa: Boolean) = if (isFa) "مسیر آفلاین کپی فایل‌های مدل:" else "Offline Model Files Directory:"
+
+    fun modelsDirectoryGuide(isFa: Boolean) = if (isFa)
+        "فایل‌های مدل (.litertlm) را از طریق کابل کامپیوتر یا برنامه مدیریت فایل در این مسیر کپی کنید یا دکمه وارد کردن از حافظه را بزنید."
+    else
+        "Copy .litertlm files into this folder via USB/file manager, or use the Import button below to copy directly from device storage."
+
+    fun scanFolder(isFa: Boolean) = if (isFa) "بروزرسانی و اسکن پوشه" else "Scan & Refresh Folder"
+
+    fun delete(isFa: Boolean) = if (isFa) "حذف فایل" else "Delete File"
 
     fun active(isFa: Boolean) = if (isFa) "مدل فعال" else "Active Model"
 
     fun selectAsActive(isFa: Boolean) = if (isFa) "انتخاب مدل" else "Select Model"
 
-    fun importLocalModel(isFa: Boolean) = if (isFa) "وارد کردن مدل از حافظه (.litertlm)" else "Import local model (.litertlm)"
+    fun filePresent(isFa: Boolean) = if (isFa) "فایل موجود است" else "File Present"
+
+    fun fileMissing(isFa: Boolean) = if (isFa) "فایل موجود نیست" else "File Missing"
+
+    fun expectedFileName(isFa: Boolean, name: String) = if (isFa) "نام فایل مورد انتظار: $name" else "Expected file: $name"
+
+    fun importLocalModel(isFa: Boolean) = if (isFa) "انتخاب و کپی فایل از حافظه گوشی" else "Select & Copy Model from Storage"
 
     fun ramRequirement(isFa: Boolean, ramGb: Int) = if (isFa) "حداقل رم: $ramGb گیگابایت" else "Min RAM: ${ramGb}GB"
 
-    fun languages(isFa: Boolean) = if (isFa) "زبان‌ها" else "Languages"
-
-    fun downloadWarningTitle(isFa: Boolean) = if (isFa) "دانلود مدل هوش مصنوعی" else "Download AI Model"
-
-    fun downloadWarningMessage(isFa: Boolean, size: String) = if (isFa)
-        "حجم این فایل حدود $size است. این مدل یک‌بار دانلود شده و سپس برای همیشه به صورت کاملاً آفلاین کار خواهد کرد. مایل به دانلود هستید؟"
-    else
-        "This file is approximately $size. Once downloaded, it runs 100% offline without any internet connection. Proceed with download?"
-
     fun cancel(isFa: Boolean) = if (isFa) "انصراف" else "Cancel"
 
-    fun proceed(isFa: Boolean) = if (isFa) "دانلود و ذخیره" else "Download Now"
+    fun copyingInProgress(isFa: Boolean) = if (isFa) "در حال کپی فایل مدل در مسیر آفلاین..." else "Copying model file to offline path..."
+
+    fun copySuccess(isFa: Boolean) = if (isFa) "فایل مدل با موفقیت کپی شد" else "Model file copied successfully"
 
     fun languageSetting(isFa: Boolean) = if (isFa) "زبان برنامه" else "App Language"
 
@@ -98,7 +105,7 @@ object AppStrings {
 
     fun clearHistoryConfirm(isFa: Boolean) = if (isFa) "آیا از حذف تمام گفتگوها اطمینان دارید؟" else "Are you sure you want to delete all conversations?"
 
-    fun modelInfoSection(isFa: Boolean) = if (isFa) "اطلاعات مدل و دستگاه" else "Model & Device Info"
+    fun modelInfoSection(isFa: Boolean) = if (isFa) "اطلاعات مدل و سخت‌افزار" else "Model & Hardware Info"
 
     fun availableRam(isFa: Boolean, ramMb: Long) = if (isFa) "رم آزاد دستگاه: ${ramMb} مگابایت" else "Available RAM: ${ramMb} MB"
 
@@ -117,7 +124,7 @@ object AppStrings {
     fun backendGpu(isFa: Boolean) = if (isFa) "ترجیح GPU" else "Prefer GPU"
 
     fun privacyNotice(isFa: Boolean) = if (isFa)
-        "حریم خصوصی کامل: تمام پردازش‌های هوش مصنوعی منحصراً درون این دستگاه انجام می‌شود و هیچ پیامی ارسال نمی‌شود."
+        "۱۰۰٪ آفلاین و بدون اینترنت: این برنامه هیچ دسترسی یا ترافیک اینترنتی ندارد و تمامی داده‌ها روی دستگاه شما باقی می‌مانند."
     else
-        "Complete Privacy: All AI inference runs strictly on-device. No data leaves your phone."
+        "100% Offline & Private: No internet access or download links. All models and prompts execute solely on your device."
 }

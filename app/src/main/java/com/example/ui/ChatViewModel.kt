@@ -13,7 +13,7 @@ import com.example.data.repository.SettingsRepository
 import com.example.downloader.ModelDownloader
 import com.example.inference.LocalLLMEngine
 import com.example.model.AppSettings
-import com.example.model.DownloadState
+import com.example.model.ModelCopyState
 import com.example.model.ModelInferenceStatus
 import com.example.model.ModelInfo
 import kotlinx.coroutines.Job
@@ -49,7 +49,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     val messages: StateFlow<List<MessageEntity>> = _messages.asStateFlow()
 
     val modelsList: StateFlow<List<ModelInfo>> = modelRepository.models
-    val downloadStates: StateFlow<Map<String, DownloadState>> = modelDownloader.downloadStates
+    val copyState: StateFlow<ModelCopyState> = modelDownloader.copyState
 
     val inferenceStatus: StateFlow<ModelInferenceStatus> = llmEngine.status
     val inferenceStatusMessage: StateFlow<String> = llmEngine.statusMessage
@@ -65,17 +65,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var messagesCollectJob: Job? = null
 
     init {
-        // Observe model download completions to refresh model list & auto-select if needed
-        viewModelScope.launch {
-            modelDownloader.downloadStates.collect { states ->
-                val hasCompleted = states.values.any { it is DownloadState.Completed }
-                if (hasCompleted) {
-                    modelRepository.refreshModelsList()
-                }
-            }
-        }
-
-        // Initialize model on startup if previously active
+        // Initialize model on startup if previously active or if an offline model is available
         viewModelScope.launch {
             val savedModelId = settings.value.activeModelId
             modelRepository.refreshModelsList()
@@ -87,6 +77,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 selectActiveModel(targetModel.id)
             }
         }
+    }
+
+    fun getModelsDirectoryPath(): String = modelRepository.getModelsDirectoryPath()
+
+    fun refreshModelsList() {
+        modelRepository.refreshModelsList()
     }
 
     fun selectConversation(conversationId: Long) {
@@ -201,16 +197,17 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun downloadModel(model: ModelInfo) {
-        modelDownloader.startDownload(model.id, model.fileName, model.downloadUrl)
+    fun copyModelFile(uri: Uri, targetFileName: String) {
+        viewModelScope.launch {
+            val result = modelRepository.importModelFromUri(uri, targetFileName)
+            result.onSuccess { imported ->
+                selectActiveModel(imported.id)
+            }
+        }
     }
 
-    fun pauseDownload(modelId: String) {
-        modelDownloader.pauseDownload(modelId)
-    }
-
-    fun cancelDownload(model: ModelInfo) {
-        modelDownloader.cancelDownload(model.id, model.fileName)
+    fun resetCopyState() {
+        modelDownloader.resetCopyState()
     }
 
     fun deleteModel(model: ModelInfo) {
@@ -220,15 +217,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 settingsRepository.updateActiveModelId(null)
             }
             modelRepository.deleteModel(model)
-        }
-    }
-
-    fun importLocalModel(uri: Uri, fileName: String?) {
-        viewModelScope.launch {
-            val result = modelRepository.importModelFromUri(uri, fileName)
-            result.onSuccess { imported ->
-                selectActiveModel(imported.id)
-            }
         }
     }
 
@@ -266,7 +254,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updatePreferredBackend(backend: String) {
         settingsRepository.updatePreferredBackend(backend)
-        // If model already loaded, reload with new backend preference
         val activeId = settings.value.activeModelId
         if (activeId != null) {
             selectActiveModel(activeId)

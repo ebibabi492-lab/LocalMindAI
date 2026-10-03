@@ -41,24 +41,28 @@ The pre-compiled production debug APK is included directly inside the repository
 
 ## ✨ Key Features
 
-### 🔒 100% Offline & Private
-* **Zero Telemetry:** No user messages, prompts, or chat histories are ever transmitted outside the device.
-* **Works Offline:** Inference executes entirely on local CPU/GPU/NPU delegates.
-* **No Account Required:** Immediate access without logins, API keys, or accounts.
+### 🔒 100% Offline & Pure Air-Gapped Privacy
+* **Zero Internet Permissions:** No `INTERNET` permission in `AndroidManifest.xml` — physically impossible to send or receive data over the web.
+* **No Download Links:** The app contains no remote download links or web APIs. Models are copied purely offline.
+* **Direct File Path Placement:** Copy `.litertlm` models directly into the app storage path (`Android/data/.../files/models/`) via USB/file manager, or import directly from device storage.
+* **Works Everywhere:** 100% functional in airplane mode on local CPU or GPU.
+* **No Account Required:** Immediate access without logins, API keys, or cloud dependencies.
 
 ### ⚡ Powered by Google LiteRT-LM
 * Uses official `com.google.ai.edge.litertlm:litertlm-android` inference engine.
-* **Hardware Acceleration:** Automatic GPU delegate initialization with seamless fallback to CPU when GPU acceleration is unavailable on specific chipsets.
+* **Hardware Acceleration:** Automatic GPU delegate initialization with seamless fallback to CPU.
 * **Real-time Streaming:** Token-by-token generation with an interactive **Stop** generation button.
 
-### 📚 In-App Model Manager
+### 📚 Purely Offline Local Model Manager
+* **Zero Web Downloads:** No remote URLs or background internet downloads.
+* **Direct Storage Path Display:** In-app folder address display with one-tap "Copy Path" button and "Scan Folder" trigger.
+* **Local Storage Import:** One-tap import and copy from phone storage (Downloads, SD card, etc.) into the local models directory.
 * **Curated Small Language Models (SLMs):**
-  * **Qwen 2.5 0.5B Instruct** (~446 MB) — Ultra-fast, ideal for 2GB–3GB RAM devices.
-  * **Gemma 3 1B IT** (~1.2 GB) — Google mobile-optimized foundation model with great reasoning.
-  * **Qwen 2.5 1.5B Instruct** (~1.4 GB) — High precision multilingual responses for 4GB+ RAM.
-  * **SmolLM2 360M Instruct** (~329 MB) — Ultra-lightweight footprint with instant startup.
-* **Custom Model Import:** Direct import of any `.litertlm` or compatible model file from phone storage or SD card via the system file picker.
-* **Resilient Downloader:** Built-in OkHttp engine featuring real-time percentage, transfer speed (MB/s), pause, resume, cancel, and cellular data warnings.
+  * **Qwen 2.5 0.5B Instruct** (`qwen2.5-0.5b-instruct.litertlm` ~446 MB) — Ultra-fast, ideal for 2GB–3GB RAM devices.
+  * **Gemma 3 1B IT** (`gemma-3-1b-it.litertlm` ~1.2 GB) — Google mobile-optimized foundation model.
+  * **Qwen 2.5 1.5B Instruct** (`qwen2.5-1.5b-instruct.litertlm` ~1.4 GB) — High precision multilingual responses for 4GB+ RAM.
+  * **SmolLM2 360M Instruct** (`smollm2-360m-instruct.litertlm` ~329 MB) — Ultra-lightweight footprint.
+  * **Custom `.litertlm` Models:** Full support for any custom-trained or quantized model file.
 
 ### 🎨 Minimalist ChatGPT-Inspired Design
 * Clean, distraction-free interface adhering to **Material Design 3 (M3)** guidelines.
@@ -159,11 +163,12 @@ gradle assembleDebug
 **لوکال‌مایند (LocalMind AI)** یک دستیار هوشمند و پیام‌رسان کاملاً آفلاین برای سیستم‌عامل اندروید است که مدل‌های زبانی کوچک (SLM) را مستقیماً بر روی سخت‌افزار تلفن همراه شما بدون نیاز به اتصال به اینترنت اجرا می‌کند.
 
 ### ویژگی‌های اصلی:
-1. **۱۰۰٪ آفلاین و بدون اینترنت:** تمامی پردازش‌های هوش مصنوعی مستقیماً بر روی پردازنده گوشی شما (CPU یا شتاب‌دهنده گرافیکی GPU) انجام می‌شود.
-2. **حفظ کامل حریم خصوصی:** هیچ پیامی به هیچ سرور یا سرویس ابری ارسال نمی‌شود.
-3. **پشتیبانی کامل از زبان فارسی:** رابط کاربری راست‌چین (RTL) خودکار همراه با پیام‌های راهنمای فارسی.
-4. **مدیریت پیشرفته مدل‌ها:** امکان دانلود مدل‌های سبک نظیر Gemma 3 1B، Qwen 2.5 0.5B/1.5B و SmolLM2 یا وارد کردن فایل‌های مدل شخصی با فرمت `.litertlm` از حافظه گوشی.
-5. **طراحی مینیمال و کاربرپسند:** الهام‌گرفته از رابط کاربری تمیز ChatGPT، همراه با حباب‌های گفتگو، امکان کپی پاسخ‌ها و دکمه توقف تولید متن.
+1. **۱۰۰٪ آفلاین و بدون دسترسی اینترنت:** دسترسی اینترنت در مانیفست برنامه حذف شده است. تمامی پردازش‌های هوش مصنوعی مستقیماً بر روی پردازنده گوشی شما (CPU یا شتاب‌دهنده گرافیکی GPU) انجام می‌شود.
+2. **بدون لینک دانلود اینترنتی:** فایل‌های مدل تنها از طریق کپی آفلاین در مسیر پوشه (`Android/data/.../files/models/`) یا وارد کردن مستقیم از حافظه گوشی (Downloads، کارت حافظه و...) بارگذاری می‌شوند.
+3. **حفظ کامل حریم خصوصی:** هیچ داده، پیام یا لاگی از دستگاه خارج نمی‌شود.
+4. **پشتیبانی کامل از زبان فارسی:** رابط کاربری راست‌چین (RTL) خودکار همراه با پیام‌های راهنمای فارسی.
+5. **مدیریت مدل‌های محلی:** امکان اسکن خودکار پوشه و شناسایی مدل‌های Qwen 2.5 0.5B/1.5B، Gemma 3 1B و SmolLM2 و مدل‌های دلخواه با فرمت `.litertlm`.
+6. **طراحی مینیمال و کاربرپسند:** الهام‌گرفته از رابط کاربری تمیز ChatGPT، همراه با حباب‌های گفتگو، امکان کپی پاسخ‌ها و دکمه توقف تولید متن.
 
 ---
 
