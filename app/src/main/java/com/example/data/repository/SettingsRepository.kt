@@ -22,7 +22,7 @@ class SettingsRepository(context: Context) {
             maxResponseTokens = prefs.getInt("max_tokens", 1024),
             temperature = prefs.getFloat("temperature", 0.7f),
             activeModelId = prefs.getString("active_model_id", null),
-            preferredBackend = prefs.getString("preferred_backend", "auto") ?: "auto"
+            preferredBackend = prefs.getString("preferred_backend", "cpu") ?: "cpu"
         )
     }
 

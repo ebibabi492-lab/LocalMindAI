@@ -35,7 +35,7 @@ data class AppSettings(
     val maxResponseTokens: Int = 1024,
     val temperature: Float = 0.7f,
     val activeModelId: String? = null,
-    val preferredBackend: String = "auto" // "auto", "gpu", "cpu"
+    val preferredBackend: String = "cpu" // "cpu", "auto", "gpu"
 )
 
 enum class ModelInferenceStatus {

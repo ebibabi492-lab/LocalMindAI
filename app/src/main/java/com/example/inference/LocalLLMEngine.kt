@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 
 class LocalLLMEngine(private val context: Context) {
@@ -45,6 +46,9 @@ class LocalLLMEngine(private val context: Context) {
     private val _statusMessage = MutableStateFlow<String>("")
     val statusMessage: StateFlow<String> = _statusMessage.asStateFlow()
 
+    private var lastTemperature: Float = 0.7f
+    private var lastMaxTokens: Int = 1024
+
     fun getAvailableRamMb(): Long {
         return try {
             val actManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -56,13 +60,42 @@ class LocalLLMEngine(private val context: Context) {
         }
     }
 
+    /**
+     * Checks if OpenCL library is physically available on this Android device.
+     */
+    fun isOpenClAvailable(): Boolean {
+        val paths = listOf(
+            "/system/vendor/lib64/libOpenCL.so",
+            "/vendor/lib64/libOpenCL.so",
+            "/system/lib64/libOpenCL.so",
+            "/system/vendor/lib/libOpenCL.so",
+            "/vendor/lib/libOpenCL.so",
+            "/system/lib/libOpenCL.so"
+        )
+        val fileFound = paths.any { File(it).exists() }
+        if (!fileFound) {
+            return false
+        }
+        return try {
+            System.loadLibrary("OpenCL")
+            true
+        } catch (e: UnsatisfiedLinkError) {
+            fileFound
+        } catch (e: Throwable) {
+            false
+        }
+    }
+
     suspend fun loadModel(
         modelFilePath: String,
-        preferredBackend: String = "auto",
+        preferredBackend: String = "cpu",
         temperature: Float = 0.7f,
         maxTokens: Int = 1024
     ): Result<Unit> = withContext(Dispatchers.Default) {
         mutex.withLock {
+            lastTemperature = temperature
+            lastMaxTokens = maxTokens
+
             val file = File(modelFilePath)
             if (!file.exists() || file.length() < 1024 * 1024) {
                 _status.value = ModelInferenceStatus.ERROR
@@ -82,11 +115,27 @@ class LocalLLMEngine(private val context: Context) {
             var usedBackendName = "CPU"
             var lastError: Throwable? = null
 
-            // Determine backend attempt order
+            val hasOpenCl = isOpenClAvailable()
+            Log.d(tag, "Checking OpenCL availability on device: $hasOpenCl")
+
+            // Determine backend attempt order based on device hardware support
             val backendsToTry = when (preferredBackend.lowercase()) {
-                "gpu" -> listOf(Backend.GPU() to "GPU", Backend.CPU() to "CPU (Fallback)")
-                "cpu" -> listOf(Backend.CPU() to "CPU")
-                else -> listOf(Backend.GPU() to "GPU", Backend.CPU() to "CPU (Fallback)")
+                "gpu" -> {
+                    if (hasOpenCl) {
+                        listOf(Backend.GPU() to "GPU", Backend.CPU() to "CPU (Fallback)")
+                    } else {
+                        Log.i(tag, "OpenCL is not present on this device. Forcing CPU backend.")
+                        listOf(Backend.CPU() to "CPU (OpenCL unavailable)")
+                    }
+                }
+                "auto" -> {
+                    if (hasOpenCl) {
+                        listOf(Backend.GPU() to "GPU", Backend.CPU() to "CPU (Fallback)")
+                    } else {
+                        listOf(Backend.CPU() to "CPU")
+                    }
+                }
+                else -> listOf(Backend.CPU() to "CPU") // Default and stable for all Android hardware
             }
 
             for ((backend, name) in backendsToTry) {
@@ -118,12 +167,37 @@ class LocalLLMEngine(private val context: Context) {
 
                     val newConv = newEngine.createConversation(convConfig)
 
+                    // If GPU was attempted, probe test 1 token to catch OpenCL runtime failure before user queries
+                    if (backend is Backend.GPU) {
+                        Log.d(tag, "Probing GPU execution to verify OpenCL driver compatibility...")
+                        try {
+                            val probeFlow = newConv.sendMessageAsync("test")
+                            withTimeoutOrNull(2500) {
+                                probeFlow.collect {
+                                    throw CancellationException("Probe finished successfully")
+                                }
+                            }
+                        } catch (e: CancellationException) {
+                            // Normal exit from probe
+                            Log.d(tag, "GPU probe succeeded.")
+                        } catch (probeError: Throwable) {
+                            val msg = probeError.message ?: ""
+                            Log.w(tag, "GPU probe failed: $msg")
+                            if (msg.contains("opencl", ignoreCase = true) ||
+                                msg.contains("status code:2", ignoreCase = true) ||
+                                msg.contains("can not find", ignoreCase = true)
+                            ) {
+                                throw Exception("OpenCL library is not supported on this device GPU: $msg", probeError)
+                            }
+                        }
+                    }
+
                     engine = newEngine
                     conversation = newConv
                     _loadedModelPath.value = modelFilePath
                     usedBackendName = name
                     loadedSuccessfully = true
-                    Log.d(tag, "Engine successfully initialized with $name")
+                    Log.d(tag, "Engine successfully initialized and verified with $name")
                     break
                 } catch (t: Throwable) {
                     Log.w(tag, "Failed to initialize with backend $name: ${t.message}", t)
@@ -166,12 +240,48 @@ class LocalLLMEngine(private val context: Context) {
                 }
             }
         } catch (e: CancellationException) {
-            // User requested to stop generation
             Log.d(tag, "Generation cancelled by user")
             throw e
         } catch (t: Throwable) {
-            Log.e(tag, "Error during inference: ${t.message}", t)
-            emit("\n[Inference error: ${t.localizedMessage ?: "Error processing message"}]")
+            val errMsg = t.localizedMessage ?: t.message ?: "Unknown inference error"
+            Log.e(tag, "Error during inference: $errMsg", t)
+
+            // If an OpenCL / GPU error occurs during query, automatically fallback to CPU
+            if (errMsg.contains("opencl", ignoreCase = true) ||
+                errMsg.contains("status code:2", ignoreCase = true) ||
+                errMsg.contains("can not find", ignoreCase = true)
+            ) {
+                val currentPath = _loadedModelPath.value
+                if (currentPath != null) {
+                    emit("\n[Switching automatically to CPU backend due to device GPU/OpenCL limitation...]\n")
+                    try {
+                        loadModel(
+                            modelFilePath = currentPath,
+                            preferredBackend = "cpu",
+                            temperature = lastTemperature,
+                            maxTokens = lastMaxTokens
+                        )
+                        val cpuConv = conversation
+                        if (cpuConv != null) {
+                            var cpuResponse = ""
+                            cpuConv.sendMessageAsync(prompt).collect { message ->
+                                val chunk = message.contents.contents
+                                    .filterIsInstance<Content.Text>()
+                                    .joinToString("") { it.text }
+                                if (chunk.isNotEmpty()) {
+                                    cpuResponse += chunk
+                                    emit(cpuResponse)
+                                }
+                            }
+                            return@flow
+                        }
+                    } catch (cpuError: Throwable) {
+                        Log.e(tag, "CPU fallback also encountered error: ${cpuError.message}", cpuError)
+                    }
+                }
+            }
+
+            emit("\n[Inference error: $errMsg]")
         }
     }.flowOn(Dispatchers.Default)
 

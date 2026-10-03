@@ -230,6 +230,44 @@ fun SettingsScreen(
                 }
             }
 
+            // Hardware Backend (CPU / Auto / GPU)
+            item {
+                SettingsCard(title = AppStrings.backendSetting(isFa)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChip(
+                                selected = settings.preferredBackend == "cpu",
+                                onClick = { viewModel.updatePreferredBackend("cpu") },
+                                label = { Text(if (isFa) "CPU (پایدار)" else "CPU (Stable)", fontSize = 12.sp) }
+                            )
+                            FilterChip(
+                                selected = settings.preferredBackend == "auto",
+                                onClick = { viewModel.updatePreferredBackend("auto") },
+                                label = { Text(if (isFa) "خودکار (Auto)" else "Auto", fontSize = 12.sp) }
+                            )
+                            FilterChip(
+                                selected = settings.preferredBackend == "gpu",
+                                onClick = { viewModel.updatePreferredBackend("gpu") },
+                                label = { Text("GPU (OpenCL)", fontSize = 12.sp) }
+                            )
+                        }
+                        Text(
+                            text = if (isFa) {
+                                "حالت CPU روی تمام گوشی‌ها ۱۰۰٪ پایدار است و نیازی به درایور OpenCL ندارد."
+                            } else {
+                                "CPU mode is 100% stable across all devices and requires no OpenCL driver."
+                            },
+                            fontSize = 11.sp,
+                            lineHeight = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+
             // Model & Device Info Card
             item {
                 SettingsCard(title = AppStrings.modelInfoSection(isFa)) {
