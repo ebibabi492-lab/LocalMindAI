@@ -30,10 +30,10 @@ Once your chosen language model is downloaded or imported, the entire conversati
 
 ## 📦 Download APK
 
-The pre-compiled production debug APK is included directly inside the repository under the [`build_app/`](build_app/) directory:
+The pre-compiled production debug APK is included directly inside the repository under the [`project_apk/`](project_apk/) and [`build_app/`](build_app/) directories:
 
-- 📥 **Direct APK:** [`build_app/LocalMind_AI.apk`](build_app/LocalMind_AI.apk)
-- 📥 **Alternative mirror:** [`build_app/app-debug.apk`](build_app/app-debug.apk)
+- 📥 **Direct APK:** [`project_apk/LocalMind_AI.apk`](project_apk/LocalMind_AI.apk)
+- 📥 **Alternative mirror:** [`project_apk/app-debug.apk`](project_apk/app-debug.apk) (also mirrored in [`build_app/LocalMind_AI.apk`](build_app/LocalMind_AI.apk))
 - **Minimum Android Version:** Android 10 (API level 29)
 - **Target Android Version:** Android 15 (API level 35)
 
