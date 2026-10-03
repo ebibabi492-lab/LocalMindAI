@@ -1,0 +1,6 @@
+{
+  "name": "LocalMind AI",
+  "description": "Minimal on-device offline AI assistant powered by LiteRT-LM",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
